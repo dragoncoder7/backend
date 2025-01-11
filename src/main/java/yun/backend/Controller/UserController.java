@@ -74,6 +74,16 @@ public class UserController {
         return userService.removeById(id);
     }
 
+    @RequestMapping(value = "/getCurrent", method = RequestMethod.GET)
+    public User getCurrent(HttpServletRequest request){
+        User user = (User)request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (user == null){
+            return null;
+        }
+        user = userService.getById(user.getId());
+        return userService.getSafeUser(user);
+    }
+
     public boolean isAdmin(HttpServletRequest request){
         User user = (User)request.getSession().getAttribute(USER_LOGIN_STATE);
         return user != null && user.getUserRole() == 1;
