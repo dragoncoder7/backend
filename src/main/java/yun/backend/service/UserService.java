@@ -14,6 +14,8 @@ import java.util.List;
 public interface UserService extends IService<User> {
     long UserRegister(String username, String password, String checkPassword);
 
+    long UserRegister(String userAccount, String userPassword, String checkPassword, String planetCode);
+
     User userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     User getSafeUser(User user);

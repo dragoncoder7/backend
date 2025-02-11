@@ -3,14 +3,17 @@ package yun.backend.Controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import yun.backend.mapper.UserMapper;
+import yun.backend.common.BaseResponse;
+import yun.backend.common.ErrorCode;
+import yun.backend.common.ResultUtils;
+import yun.backend.exception.CustomException;
 import yun.backend.model.domain.User;
 import yun.backend.model.domain.request.UserLoginRequest;
 import yun.backend.model.domain.request.UserRegisterRequest;
 import yun.backend.service.UserService;
-import yun.backend.service.impl.UserServiceImpl;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,36 +23,40 @@ import java.util.stream.Collectors;
 import static yun.backend.constant.UserConstant.USER_LOGIN_STATE;
 
 @RestController
+@Slf4j
 @RequestMapping(value = "/user")
 public class UserController {
     @Resource
     private UserService userService;
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public long UserRegister(@RequestBody UserRegisterRequest userRegisterRequest){
+    public BaseResponse<Long> UserRegister(@RequestBody UserRegisterRequest userRegisterRequest){
         if (userRegisterRequest == null) {
-            return -1;
+            throw new CustomException(ErrorCode.PARAMS_ERROR);
         }
         String username = userRegisterRequest.getUserAccount();
         String password = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        if (StringUtils.isAllBlank(username, password, checkPassword)){
-            return -1;
+        String planetCode = userRegisterRequest.getPlanetCode();
+        if (StringUtils.isAnyBlank(username, password, checkPassword, planetCode)){
+            return null;
         }
-        return userService.UserRegister(username, password, checkPassword);
+        long result = userService.UserRegister(username, password, checkPassword, planetCode);
+        return ResultUtils.success(result);
     }
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public User UserLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request){
+    @PostMapping("/login")
+    public BaseResponse<User> UserLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request){
         System.out.println("进入调用接口"+ new Date());
         if (userLoginRequest == null) {
-            return null;
+            throw new CustomException(ErrorCode.PARAMS_ERROR,"请求参数为空");
         }
         String username = userLoginRequest.getUserAccount();
         String password = userLoginRequest.getUserPassword();
-        if (StringUtils.isAllBlank(username, password)){
-            return null;
+        if (StringUtils.isAnyBlank(username, password)){
+            return ResultUtils.failure(ErrorCode.PARAMS_ERROR, "账号或密码不能为空！");
         }
-        return userService.userLogin(username, password, request);
+        User user = userService.userLogin(username, password, request);
+        return ResultUtils.success(user);
     }
 
     @RequestMapping(value = "/search",method = RequestMethod.GET)

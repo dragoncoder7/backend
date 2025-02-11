@@ -9,9 +9,11 @@ import lombok.Data;
  */
 @Data
 public class UserRegisterRequest {
-    String userAccount;
+    private String userAccount;
 
-    String userPassword;
+    private String userPassword;
 
-    String checkPassword;
+    private String checkPassword;
+
+    private String planetCode;
 }
