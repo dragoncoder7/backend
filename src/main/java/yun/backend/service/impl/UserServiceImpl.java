@@ -21,15 +21,16 @@ import java.util.regex.Pattern;
 import static yun.backend.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
-* @author Maoyunlong
-* @description 针对表【user(用户)】的数据库操作Service实现
-* @createDate 2025-01-06 20:04:00
-*/
+ * @author Maoyunlong
+ * @description 针对表【user(用户)】的数据库操作Service实现
+ * @createDate 2025-01-06 20:04:00
+ */
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
-    implements UserService{
-    private static final String salt = "long";;
+        implements UserService {
+    private static final String salt = "long";
+    ;
 
     @Resource
     private UserMapper userMapper;
@@ -42,8 +43,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 用户注册
      *
-     * @param userAccount 用户账号
-     * @param userPassword 用户密码
+     * @param userAccount   用户账号
+     * @param userPassword  用户密码
      * @param checkPassword 二次确认密码
      * @return 用户id
      */
@@ -51,15 +52,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public long UserRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
         //判断数据是否为空
         //todo 记得修改为自定义异常
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)){
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             throw new CustomException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
         //要求账号长度至少超过5位， 密码长度超过8位
-        if (userAccount.length() < 5 || userPassword.length() < 8 || checkPassword.length() < 8){
+        if (userAccount.length() < 5 || userPassword.length() < 8 || checkPassword.length() < 8) {
             throw new CustomException(ErrorCode.PARAMS_ERROR, "用户账号过短或用户密码过短");
         }
         //确保密码和二次确认密码一致
-        if (!userPassword.equals(checkPassword)){
+        if (!userPassword.equals(checkPassword)) {
             throw new CustomException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
         //确保星球编号唯一
@@ -70,20 +71,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String regex = "^(?=.*[A-Za-z])(?=.*\\d)|(?=.*[A-Za-z])(?=.*[@$!%*?&])|(?=.*\\d)(?=.*[@$!%*?&])$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(userPassword);
-        if (!matcher.find()){
+        if (!matcher.find()) {
             return -1;
         }
         //账号只能包含数字和字母
         regex = "^[A-Za-z0-9]+$";
         pattern = Pattern.compile(regex);
         matcher = pattern.matcher(userAccount);
-        if (!matcher.find()){
+        if (!matcher.find()) {
             return -1;
         }
         //效验账号是否已存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
-        if (userMapper.selectCount(queryWrapper) > 0){
+        if (userMapper.selectCount(queryWrapper) > 0) {
             throw new CustomException(ErrorCode.PARAMS_ERROR, "账号已存在");
         }
 
@@ -97,11 +98,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         //密码MD5加密
         // 使用 Apache Commons Codec 的 DigestUtils 进行MD5加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((salt+userPassword).getBytes());
+        String encryptPassword = DigestUtils.md5DigestAsHex((salt + userPassword).getBytes());
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
         boolean res = this.save(user);
-        if (!res){
+        if (!res) {
             return -1;
         }
         return user.getId();
@@ -110,35 +111,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 用户登录
      *
-     * @param userAccount 用户账号
+     * @param userAccount  用户账号
      * @param userPassword 用户密码
      * @return 用户
      */
     @Override
-    public User userLogin(String userAccount, String userPassword, HttpServletRequest request){
+    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         //判断数据是否为空
         //todo 记得修改为自定义异常
-        if (StringUtils.isAnyBlank(userAccount, userPassword)){
-            throw  new CustomException(ErrorCode.PARAMS_ERROR, "账号密码为空");
+        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
+            throw new CustomException(ErrorCode.PARAMS_ERROR, "账号密码为空");
         }
         //要求账号长度至少超过5位， 密码长度超过8位
-        if (userAccount.length() < 5 || userPassword.length() < 8){
-            throw  new CustomException(ErrorCode.PARAMS_ERROR, "密码长度过短");
+        if (userAccount.length() < 5 || userPassword.length() < 8) {
+            throw new CustomException(ErrorCode.PARAMS_ERROR, "密码长度过短");
         }
         //效验账号是否已存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        String encryptPassword = DigestUtils.md5DigestAsHex((salt+userPassword).getBytes());
+        String encryptPassword = DigestUtils.md5DigestAsHex((salt + userPassword).getBytes());
         queryWrapper.eq("userAccount", userAccount);
-        queryWrapper.eq("userPassword",encryptPassword);
+        queryWrapper.eq("userPassword", encryptPassword);
         User user = userMapper.selectOne(queryWrapper);
 
-        if (user == null){
+        if (user == null) {
             log.info("login failed! username and password is not same!");
-            throw new CustomException(ErrorCode.PARAMS_ERROR,"账号不存在！");
+            throw new CustomException(ErrorCode.PARAMS_ERROR, "账号不存在！");
         }
         User SafeUser = getSafeUser(user);
-        request.getSession().setAttribute(USER_LOGIN_STATE,SafeUser);
-        log.info("用户登录成功！"+SafeUser);
+        request.getSession().setAttribute(USER_LOGIN_STATE, SafeUser);
+        log.info("用户登录成功！" + SafeUser);
         return SafeUser;
     }
 
